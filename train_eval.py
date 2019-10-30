@@ -13,6 +13,7 @@ from util import *
 from dataset import *
 import tqdm
 
+
 #Model Parameters
 emb_dim = 512                  # dimension of word embeddings
 attention_dim = 512            # attention hidden size
@@ -32,7 +33,7 @@ print_freq = 100                        # print training/validation stats every 
 fine_tune_encoder = False                # set to true after 20 epochs 
 checkpoint = None    # path to checkpoint, None at the begining
 
-annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
+#annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
 
 data_folder = ''
 dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
@@ -197,7 +198,9 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     # Calculate Evaluation Scores
     with open(resFile, 'w') as wr:
         json.dump(results,wr)
-        
+    
+    
+    """    
     coco = COCO(annFile)
     cocoRes = coco.loadRes(resFile)
     # create cocoEval object by taking coco and cocoRes
@@ -210,7 +213,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     # Save Scores for all images in resFile
     with open(evalFile, 'w') as w:
         json.dump(cocoEval.eval, w)
-
+    """
     return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
 
