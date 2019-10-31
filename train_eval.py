@@ -12,6 +12,7 @@ from models import *
 from util import *
 from dataset import *
 import tqdm
+from nltk.translate.bleu_score import corpus_bleu   
 
 
 #Model Parameters
@@ -28,7 +29,7 @@ workers = 1                             # number of workers for data-loading
 encoder_lr = 1e-4                       # learning rate for encoder. if fine-tuning, change to 1e-5 for CNN parameters only
 decoder_lr = 5e-4                       # learning rate for decoder
 grad_clip = 0.1                         # clip gradients at an absolute value of
-best_cider = 0.                         # Current BLEU-4 score 
+best_bleu4 = 0.                         # Current BLEU-4 score 
 print_freq = 100                        # print training/validation stats every __ batches
 fine_tune_encoder = False                # set to true after 20 epochs 
 checkpoint = None    # path to checkpoint, None at the begining
@@ -190,6 +191,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         sentence = ' '.join([rev_word_map[sen_idx[i]] for i in range(len(sen_idx))])
         item_dict = {"image_id": image_id.item(), "caption": sentence}
         results.append(item_dict)
+        print(sentence)
     
     print("Calculating Evalaution Metric Scores......\n")
     
@@ -214,7 +216,9 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     with open(evalFile, 'w') as w:
         json.dump(cocoEval.eval, w)
     """
-    return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
+    # return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
+
+    return "bleu_score"
 
 
 with open('{}/WORDMAP_{}.json'.format(data_folder, dataset_name), 'r') as j:
@@ -238,7 +242,7 @@ else:
     checkpoint = torch.load(checkpoint)
     start_epoch = checkpoint['epoch'] + 1
     epochs_since_improvement = checkpoint['epochs_since_improvement']
-    best_cider = checkpoint['cider']
+    best_bleu4 = checkpoint['bleu']
     decoder = checkpoint['decoder']
     decoder_optimizer = checkpoint['decoder_optimizer']
     encoder = checkpoint['encoder']
@@ -303,22 +307,26 @@ for epoch in range(start_epoch, epochs):
           vocab_size = len(word_map))
     
     # One epoch's validation
-    recent_cider, recent_bleu4 = validate(val_loader = val_loader, 
+    recent_bleu4 = validate(val_loader = val_loader, 
                                           encoder = encoder, 
                                           decoder = decoder,
                                           beam_size = 3, 
                                           epoch = epoch, 
                                           vocab_size = len(word_map))
     
-    print("Epoch {}:\tCIDEr Score: {}\tBLEU-4 Score: {}".format(epoch, recent_cider, recent_bleu4))
+    # print("Epoch {}:\tCIDEr Score: {}\tBLEU-4 Score: {}".format(epoch, recent_cider, recent_bleu4))
+    print("Epoch {}:\tBLEU-4 Score: {}".format(epoch, recent_bleu4))
 
     # Check if there was an improvement
-    is_best = recent_cider > best_cider
-    best_cider = max(recent_cider, best_cider)
+    # is_best = recent_cider > best_cider
+    # best_cider = max(recent_cider, best_cider)
+    is_best = recent_bleu4 > best_bleu4
+    best_bleu4 = max(recent_bleu4, best_bleu4)
+
     if not is_best:
         epochs_since_improvement += 1
         print("\nEpochs since last improvement: %d\n" % (epochs_since_improvement,))
     else:
         epochs_since_improvement = 0
 
-    save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_cider, is_best)
+    save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_bleu4, is_best)
