@@ -191,14 +191,18 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         sen_idx = [w for w in seq if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
         sentence = ' '.join([rev_word_map[sen_idx[i]] for i in range(len(sen_idx))])
 
+        # Construct Hypothesis
+        hypothesis = [sentence.split()]
+
         caption_idx = [w.item() for w in caption.squeeze() if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
         caption_sentence = ' '.join([rev_word_map[caption_idx[i]] for i in range(len(caption_idx))])
 
+        # Fetch References
         references = []
         for caption_index in all_captions.squeeze():
             idx = [w.item() for w in caption_index if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
             ground_sentence = ' '.join([rev_word_map[idx[i]] for i in range(len(idx))])
-            references.append(ground_sentence)
+            references.append(ground_sentence.split())
         #item_dict = {"image_id": image_id.item(), "caption": sentence}
         #results.append(item_dict)
         print(sentence)
@@ -230,7 +234,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     """
     # return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
-    return len(results)
+    return corpus_bleu(references, hypothesis)
 
 
 with open('{}/WORDMAP_{}.json'.format(data_folder, dataset_name), 'r') as j:
