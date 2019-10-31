@@ -26,11 +26,11 @@ def clip_gradient(optimizer, grad_clip):
                 param.grad.data.clamp_(-grad_clip, grad_clip)
 
 #Function to save the model checkpoint
-def save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, cider, is_best):
+def save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, bleu, is_best):
 
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
-             'cider': cider,
+             'bleu': bleu,
              'encoder': encoder,
              'decoder': decoder,
              'encoder_optimizer': encoder_optimizer,

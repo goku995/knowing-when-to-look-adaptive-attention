@@ -25,7 +25,7 @@ start_epoch = 0
 epochs = 40                             # number of epochs to train before finetuning the encoder. Set to 18 when finetuning ecoder
 epochs_since_improvement = 0            # keeps track of number of epochs since there's been an improvement in validation BLEU
 batch_size = 80                         # set to 32 when finetuning the encoder
-workers = 1                             # number of workers for data-loading
+workers = 4                             # number of workers for data-loading
 encoder_lr = 1e-4                       # learning rate for encoder. if fine-tuning, change to 1e-5 for CNN parameters only
 decoder_lr = 5e-4                       # learning rate for decoder
 grad_clip = 0.1                         # clip gradients at an absolute value of
@@ -190,10 +190,20 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         # Construct Sentence
         sen_idx = [w for w in seq if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
         sentence = ' '.join([rev_word_map[sen_idx[i]] for i in range(len(sen_idx))])
+
+        caption_idx = [w.item() for w in caption.squeeze() if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
+        caption_sentence = ' '.join([rev_word_map[caption_idx[i]] for i in range(len(caption_idx))])
+
+        references = []
+        for caption_index in all_captions.squeeze():
+            idx = [w.item() for w in caption_index if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
+            ground_sentence = ' '.join([rev_word_map[idx[i]] for i in range(len(idx))])
+            references.append(ground_sentence)
         #item_dict = {"image_id": image_id.item(), "caption": sentence}
         #results.append(item_dict)
         print(sentence)
-        print(caption, all_captions)
+        print(caption_sentence)
+        print(references)
     
     print("Calculating Evalaution Metric Scores......\n")
     
