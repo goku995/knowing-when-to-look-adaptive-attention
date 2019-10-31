@@ -281,7 +281,7 @@ train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_n
                                             pin_memory=True)
 
 val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', transform=transforms.Compose([normalize])), 
-                                            batch_size=batch_size, 
+                                            batch_size=1, 
                                             shuffle=True, 
                                             num_workers=workers, 
                                             pin_memory=True)
