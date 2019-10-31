@@ -6,6 +6,8 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from torch.nn.utils.rnn import pack_padded_sequence
 import torch.backends.cudnn as cudnn
+from cococaption.pycocotools.coco import COCO
+from cococaption.pycocoevalcap.eval import COCOEvalCap
 from models import *
 from util import *
 from dataset import *
@@ -191,7 +193,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     print("Calculating Evalaution Metric Scores......\n")
     
     resFile = 'results/flickr30k_results_' + str(epoch) + '.json' 
-    evalFile = 'results/flickr30k_val2014_eval_' + str(epoch) + '.json' 
+    evalFile = 'results/flickr30k_eval_' + str(epoch) + '.json' 
     # Calculate Evaluation Scores
     with open(resFile, 'w') as wr:
         json.dump(results,wr)
