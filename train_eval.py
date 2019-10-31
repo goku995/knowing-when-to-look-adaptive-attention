@@ -6,12 +6,12 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from torch.nn.utils.rnn import pack_padded_sequence
 import torch.backends.cudnn as cudnn
-from cococaption.pycocotools.coco import COCO
-from cococaption.pycocoevalcap.eval import COCOEvalCap
+#from cococaption.pycocotools.coco import COCO
+#from cococaption.pycocoevalcap.eval import COCOEvalCap
 from models import *
 from util import *
 from dataset import *
-import tqdm
+from tqdm import tqdm
 from nltk.translate.bleu_score import corpus_bleu   
 
 
@@ -36,7 +36,7 @@ checkpoint = None    # path to checkpoint, None at the begining
 
 #annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
 
-data_folder = ''
+data_folder = '../../../caption_dataset/flickr30k_files/'
 dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -64,8 +64,8 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
         targets = encoded_captions[:, 1:]
         # Remove timesteps that we didn't decode at, or are pads
         # pack_padded_sequence is an easy trick to do this
-        scores, _ = pack_padded_sequence(predictions, decode_lengths, batch_first=True)
-        targets, _ = pack_padded_sequence(targets, decode_lengths, batch_first=True)
+        scores = pack_padded_sequence(predictions, decode_lengths, batch_first=True)[0]
+        targets = pack_padded_sequence(targets, decode_lengths, batch_first=True)[0]
         # Calculate loss
         loss = criterion(scores, targets)
         # Back prop.
@@ -89,7 +89,7 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Top-5 Accuracy {top5.val:.3f} ({top5.avg:.3f})\t'.format(epoch, i, len(train_loader),
                                                                             loss=losses,
-                                                                            top5=top5accs))
+                                                                            top5=top5accs), flush=True)
 
 def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     """
@@ -98,8 +98,9 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     encoder.eval()
     decoder.eval()
     results = []
-
-    for i, (img, image_id) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
+    
+    #image_id = "EVALUATING AT BEAM SIZE  " + str(beam_size)
+    for i, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
 
         k = beam_size
         infinite_pred = False
@@ -189,9 +190,10 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         # Construct Sentence
         sen_idx = [w for w in seq if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
         sentence = ' '.join([rev_word_map[sen_idx[i]] for i in range(len(sen_idx))])
-        item_dict = {"image_id": image_id.item(), "caption": sentence}
-        results.append(item_dict)
+        #item_dict = {"image_id": image_id.item(), "caption": sentence}
+        #results.append(item_dict)
         print(sentence)
+        print(caption, all_captions)
     
     print("Calculating Evalaution Metric Scores......\n")
     
@@ -218,7 +220,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     """
     # return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
-    return "bleu_score"
+    return len(results)
 
 
 with open('{}/WORDMAP_{}.json'.format(data_folder, dataset_name), 'r') as j:

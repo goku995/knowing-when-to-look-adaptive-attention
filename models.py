@@ -7,6 +7,8 @@ from torch.nn import init
 import torch.nn.functional as F
 import math
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class Encoder(nn.Module):
     def __init__(self, hidden_size, embed_size):
         super(Encoder,self).__init__()
