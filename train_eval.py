@@ -5,12 +5,11 @@ import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
 from torch.nn.utils.rnn import pack_padded_sequence
-from cococaption.pycocotools.coco import COCO
-from cococaption.pycocoevalcap.eval import COCOEvalCap
 import torch.backends.cudnn as cudnn
 from models import *
 from util import *
 from dataset import *
+import tqdm
 
 #Model Parameters
 emb_dim = 512                  # dimension of word embeddings
@@ -30,8 +29,14 @@ best_cider = 0.                         # Current BLEU-4 score
 print_freq = 100                        # print training/validation stats every __ batches
 fine_tune_encoder = False                # set to true after 20 epochs 
 checkpoint = None    # path to checkpoint, None at the begining
+
 annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
 
+data_folder = ''
+dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("{} device is being used".format(device)) 
 
 def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_optimizer, epoch, vocab_size):
 
@@ -185,8 +190,8 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     
     print("Calculating Evalaution Metric Scores......\n")
     
-    resFile = 'cococaptioncider/results/captions_val2014_results_' + str(epoch) + '.json' 
-    evalFile = 'cococaptioncider/results/captions_val2014_eval_' + str(epoch) + '.json' 
+    resFile = 'results/flickr30k_results_' + str(epoch) + '.json' 
+    evalFile = 'results/flickr30k_val2014_eval_' + str(epoch) + '.json' 
     # Calculate Evaluation Scores
     with open(resFile, 'w') as wr:
         json.dump(results,wr)
@@ -207,7 +212,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
 
-with open('caption data/WORDMAP_coco.json', 'r') as j:
+with open('{}/WORDMAP_{}.json'.format(data_folder, dataset_name), 'r') as j:
     word_map = json.load(j)
 
 rev_word_map = {v: k for k, v in word_map.items()}  # idx2word
@@ -248,15 +253,27 @@ criterion = nn.CrossEntropyLoss().to(device)
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
-train_loader = torch.utils.data.DataLoader(COCOTrainDataset(transform=transforms.Compose([normalize])),
-                                           batch_size = batch_size, 
-                                           shuffle=True, 
-                                           pin_memory=True)
+# train_loader = torch.utils.data.DataLoader(COCOTrainDataset(transform=transforms.Compose([normalize])),
+#                                            batch_size = batch_size, 
+#                                            shuffle=True, 
+#                                            pin_memory=True)
 
-val_loader = torch.utils.data.DataLoader(COCOValidationDataset(transform=transforms.Compose([normalize])),
-                                         batch_size = 1,
-                                         shuffle=True, 
-                                         pin_memory=True)
+# val_loader = torch.utils.data.DataLoader(COCOValidationDataset(transform=transforms.Compose([normalize])),
+#                                          batch_size = 1,
+#                                          shuffle=True, 
+#                                          pin_memory=True)
+
+train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'TRAIN', transform=transforms.Compose([normalize])), 
+                                            batch_size=batch_size, 
+                                            shuffle=True, 
+                                            num_workers=workers, 
+                                            pin_memory=True)
+
+val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', transform=transforms.Compose([normalize])), 
+                                            batch_size=batch_size, 
+                                            shuffle=True, 
+                                            num_workers=workers, 
+                                            pin_memory=True)
 
 # Epochs
 for epoch in range(start_epoch, epochs):
