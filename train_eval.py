@@ -98,6 +98,9 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     encoder.eval()
     decoder.eval()
     results = []
+
+    references = []
+    hypothesis = []
     
     #image_id = "EVALUATING AT BEAM SIZE  " + str(beam_size)
     for i, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
@@ -192,22 +195,24 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         sentence = ' '.join([rev_word_map[sen_idx[i]] for i in range(len(sen_idx))])
 
         # Construct Hypothesis
-        hypothesis = [sentence.split()]
+        hypothesis.append(sentence.split())
 
-        caption_idx = [w.item() for w in caption.squeeze() if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
+        caption_idx = [w.item() for w in caption.squeeze() if w.item() not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
         caption_sentence = ' '.join([rev_word_map[caption_idx[i]] for i in range(len(caption_idx))])
 
         # Fetch References
-        references = []
+        refs = []
         for caption_index in all_captions.squeeze():
-            idx = [w.item() for w in caption_index if w not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
+            idx = [w.item() for w in caption_index if w.item() not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
             ground_sentence = ' '.join([rev_word_map[idx[i]] for i in range(len(idx))])
-            references.append(ground_sentence.split())
+            refs.append(ground_sentence.split())
         #item_dict = {"image_id": image_id.item(), "caption": sentence}
         #results.append(item_dict)
+        references.append(refs)
+
         print(sentence)
         print(caption_sentence)
-        print(references)
+        print(refs)
     
     print("Calculating Evalaution Metric Scores......\n")
     
@@ -271,6 +276,13 @@ else:
 # Move to GPU, if available
 decoder = decoder.to(device)
 encoder = encoder.to(device)
+
+"""
+if torch.cuda.device_count() > 1:
+    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    encoder = nn.DataParallel(encoder)
+    decoder = nn.DataParallel(decoder)
+"""
 
 # Loss function
 criterion = nn.CrossEntropyLoss().to(device)
