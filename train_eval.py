@@ -13,6 +13,8 @@ from util import *
 from dataset import *
 from tqdm import tqdm
 from nltk.translate.bleu_score import corpus_bleu   
+from torch.utils.tensorboard import SummaryWriter
+from datetime import datetime
 
 
 #Model Parameters
@@ -41,6 +43,11 @@ dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("{} device is being used".format(device)) 
+
+now = datetime.now()
+writer = SummaryWriter('./runs/attention_{}'.format(now.strftime("%d_%H_%M")))
+
+unorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 
 def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_optimizer, epoch, vocab_size):
 
@@ -210,9 +217,19 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         #results.append(item_dict)
         references.append(refs)
 
-        print(sentence)
-        print(caption_sentence)
-        print(refs)
+        # print(sentence)
+        # print(caption_sentence)
+        # print(refs)
+
+        image = unorm(image.squeeze(0))
+
+        image_np = image.permute(1, 2 , 0).cpu().numpy()
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(image_np)
+        plt.title(sentence)
+        writer.add_figure("image caption", fig, epoch*len(val_loader) + i, True)
+        plt.clf()
+
     
     print("Calculating Evalaution Metric Scores......\n")
     
@@ -239,7 +256,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     """
     # return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
-    return corpus_bleu(references, hypothesis)
+    return corpus_bleu(references, hypothesis, auto_reweigh=True)
 
 
 with open('{}/WORDMAP_{}.json'.format(data_folder, dataset_name), 'r') as j:
@@ -341,7 +358,8 @@ for epoch in range(start_epoch, epochs):
                                           beam_size = 3, 
                                           epoch = epoch, 
                                           vocab_size = len(word_map))
-    
+    writer.add_scalar("belu4", recent_bleu4, epoch)
+
     # print("Epoch {}:\tCIDEr Score: {}\tBLEU-4 Score: {}".format(epoch, recent_cider, recent_bleu4))
     print("Epoch {}:\tBLEU-4 Score: {}".format(epoch, recent_bleu4))
 
