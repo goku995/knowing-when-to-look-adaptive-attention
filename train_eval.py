@@ -33,8 +33,9 @@ decoder_lr = 5e-4                       # learning rate for decoder
 grad_clip = 0.1                         # clip gradients at an absolute value of
 best_bleu4 = 0.                         # Current BLEU-4 score 
 print_freq = 100                        # print training/validation stats every __ batches
+log_freq = 500
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = None    # path to checkpoint, None at the begining
+checkpoint = './BEST_checkpoint_6.pth.tar'    # path to checkpoint, None at the begining
 
 #annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
 
@@ -110,7 +111,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     hypothesis = []
     
     #image_id = "EVALUATING AT BEAM SIZE  " + str(beam_size)
-    for i, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
+    for index, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
 
         k = beam_size
         infinite_pred = False
@@ -220,15 +221,18 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         # print(sentence)
         # print(caption_sentence)
         # print(refs)
+        # print(index)
 
-        image = unorm(image.squeeze(0))
+        if epoch%5 == 0 and index%log_freq == 0:
+            print(sentence)
+            image = unorm(image.squeeze(0))
 
-        image_np = image.permute(1, 2 , 0).cpu().numpy()
-        fig = plt.figure(figsize=(10, 10))
-        plt.imshow(image_np)
-        plt.title(sentence)
-        writer.add_figure("image caption", fig, epoch*len(val_loader) + i, True)
-        plt.clf()
+            image_np = image.permute(1, 2 , 0).cpu().numpy()
+            fig = plt.figure(figsize=(10, 10))
+            plt.imshow(image_np)
+            plt.title(sentence)
+            writer.add_figure("image caption", fig, epoch, True)
+            plt.clf()
 
     
     print("Calculating Evalaution Metric Scores......\n")
