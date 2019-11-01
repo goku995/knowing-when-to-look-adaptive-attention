@@ -33,9 +33,9 @@ decoder_lr = 5e-4                       # learning rate for decoder
 grad_clip = 0.1                         # clip gradients at an absolute value of
 best_bleu4 = 0.                         # Current BLEU-4 score 
 print_freq = 100                        # print training/validation stats every __ batches
-log_freq = 500
+log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = './BEST_checkpoint_6.pth.tar'    # path to checkpoint, None at the begining
+checkpoint = './checkpoint_26.pth.tar'    # path to checkpoint, None at the begining
 
 #annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
 
@@ -223,7 +223,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
         # print(refs)
         # print(index)
 
-        if epoch%5 == 0 and index%log_freq == 0:
+        if epoch%3 == 0 and index%log_freq == 0:
             print(sentence)
             image = unorm(image.squeeze(0))
 
@@ -337,7 +337,7 @@ val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_nam
 for epoch in range(start_epoch, epochs):
     
     # Terminate training if there is no improvmenet for 8 epochs
-    if epochs_since_improvement == 8:
+    if epochs_since_improvement == 5:
         print("No Improvement for the last 6 epochs. Training Terminated")
         break
     
@@ -359,7 +359,7 @@ for epoch in range(start_epoch, epochs):
     recent_bleu4 = validate(val_loader = val_loader, 
                                           encoder = encoder, 
                                           decoder = decoder,
-                                          beam_size = 3, 
+                                          beam_size = 5, 
                                           epoch = epoch, 
                                           vocab_size = len(word_map))
     writer.add_scalar("belu4", recent_bleu4, epoch)
