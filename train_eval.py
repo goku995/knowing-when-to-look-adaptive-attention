@@ -59,7 +59,7 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
     top5accs = AverageMeter()       # top5 accuracy
 
     # Batches
-    for i, (imgs, caps, caplens) in enumerate(train_loader):
+    for i, (imgs, caps, caplens, _, _) in enumerate(train_loader):
 
         # Move to GPU, if available
         imgs = imgs.to(device)
@@ -112,7 +112,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     hypothesis = []
     
     #image_id = "EVALUATING AT BEAM SIZE  " + str(beam_size)
-    for index, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
+    for index, (img, caption, caplen, all_captions, _, _, _) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
 
         k = beam_size
         infinite_pred = False

@@ -152,6 +152,9 @@ class CaptionDataset(Dataset):
         # Total number of datapoints
         self.dataset_size = len(self.captions)
 
+        # Maximum sentence length
+        self.max_len = 50
+
     def __getitem__(self, i):
         # Remember, the Nth caption corresponds to the (N // captions_per_image)th image
         img = torch.FloatTensor(self.imgs[i // self.cpi] / 255.)
@@ -160,22 +163,28 @@ class CaptionDataset(Dataset):
 
         file_key = self.annotations[i // self.cpi]
         annotation = self.annotation_data[file_key]
-        print(annotation, flush=True)
+        # print(annotation, flush=True)
         sentences = self.sentence_data[file_key]
-        print(sentences, flush=True)
-        print(sentences[i % self.cpi], flush=True)
+        # print(sentences, flush=True)
+        # print(sentences[i % self.cpi], flush=True)
+        sentence_map = sentences[i % self.cpi]
+        sentence = sentence_map['sentence']
+
+        sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
 
         caption = torch.LongTensor(self.captions[i])
+
+        print(sentence_encoding, caption)
 
         caplen = torch.LongTensor([self.caplens[i]])
 
         if self.split is 'TRAIN':
-            return img, caption, caplen
+            return img, caption, caplen, sentence_map, annotation
         else:
             # For validation of testing, also return all 'captions_per_image' captions to find BLEU-4 score
             all_captions = torch.LongTensor(
                 self.captions[((i // self.cpi) * self.cpi):(((i // self.cpi) * self.cpi) + self.cpi)])
-            return img, caption, caplen, all_captions
+            return img, caption, caplen, all_captions, sentence_map, annotation, sentences
 
     def __len__(self):
         return self.dataset_size
