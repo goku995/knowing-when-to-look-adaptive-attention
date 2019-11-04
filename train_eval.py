@@ -37,7 +37,8 @@ log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
 checkpoint = './checkpoint_26.pth.tar'    # path to checkpoint, None at the begining
 
-#annFile = 'cococaptioncider/annotations/captions_val2014.json'  # Location of validation annotations
+annotation_path = "~/flickr30k_entities/annotation_data.json"
+sentence_path = "~/flickr30k_entities/sentence_data.json"
 
 data_folder = '../../../caption_dataset/flickr30k_files/'
 dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
@@ -214,14 +215,8 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
             idx = [w.item() for w in caption_index if w.item() not in {word_map['<start>'], word_map['<end>'], word_map['<pad>']}]
             ground_sentence = ' '.join([rev_word_map[idx[i]] for i in range(len(idx))])
             refs.append(ground_sentence.split())
-        #item_dict = {"image_id": image_id.item(), "caption": sentence}
-        #results.append(item_dict)
-        references.append(refs)
 
-        # print(sentence)
-        # print(caption_sentence)
-        # print(refs)
-        # print(index)
+        references.append(refs)
 
         if epoch%3 == 0 and index%log_freq == 0:
             print(sentence)
@@ -236,29 +231,6 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
 
     
     print("Calculating Evalaution Metric Scores......\n")
-    
-    resFile = 'results/flickr30k_results_' + str(epoch) + '.json' 
-    evalFile = 'results/flickr30k_eval_' + str(epoch) + '.json' 
-    # Calculate Evaluation Scores
-    with open(resFile, 'w') as wr:
-        json.dump(results,wr)
-    
-    
-    """    
-    coco = COCO(annFile)
-    cocoRes = coco.loadRes(resFile)
-    # create cocoEval object by taking coco and cocoRes
-    cocoEval = COCOEvalCap(coco, cocoRes)
-    # evaluate on a subset of images
-    # please remove this line when evaluating the full validation set
-    cocoEval.params['image_id'] = cocoRes.getImgIds()
-    # evaluate results
-    cocoEval.evaluate()    
-    # Save Scores for all images in resFile
-    with open(evalFile, 'w') as w:
-        json.dump(cocoEval.eval, w)
-    """
-    # return cocoEval.eval['CIDEr'], cocoEval.eval['Bleu_4']
 
     return corpus_bleu(references, hypothesis, auto_reweigh=True)
 
@@ -311,23 +283,13 @@ criterion = nn.CrossEntropyLoss().to(device)
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
-# train_loader = torch.utils.data.DataLoader(COCOTrainDataset(transform=transforms.Compose([normalize])),
-#                                            batch_size = batch_size, 
-#                                            shuffle=True, 
-#                                            pin_memory=True)
-
-# val_loader = torch.utils.data.DataLoader(COCOValidationDataset(transform=transforms.Compose([normalize])),
-#                                          batch_size = 1,
-#                                          shuffle=True, 
-#                                          pin_memory=True)
-
-train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'TRAIN', transform=transforms.Compose([normalize])), 
+train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'TRAIN', annotation_path, sentence_path, transform=transforms.Compose([normalize])), 
                                             batch_size=batch_size, 
                                             shuffle=True, 
                                             num_workers=workers, 
                                             pin_memory=True)
 
-val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', transform=transforms.Compose([normalize])), 
+val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', annotation_path, sentence_path, transform=transforms.Compose([normalize])), 
                                             batch_size=1, 
                                             shuffle=True, 
                                             num_workers=workers, 
@@ -337,8 +299,8 @@ val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_nam
 for epoch in range(start_epoch, epochs):
     
     # Terminate training if there is no improvmenet for 8 epochs
-    if epochs_since_improvement == 5:
-        print("No Improvement for the last 6 epochs. Training Terminated")
+    if epochs_since_improvement == 8:
+        print("No Improvement for the last 8 epochs. Training Terminated")
         break
     
     # Decay the learning rate by 0.8 every 3 epochs
@@ -368,8 +330,6 @@ for epoch in range(start_epoch, epochs):
     print("Epoch {}:\tBLEU-4 Score: {}".format(epoch, recent_bleu4))
 
     # Check if there was an improvement
-    # is_best = recent_cider > best_cider
-    # best_cider = max(recent_cider, best_cider)
     is_best = recent_bleu4 > best_bleu4
     best_bleu4 = max(recent_bleu4, best_bleu4)
 

@@ -105,7 +105,7 @@ class CaptionDataset(Dataset):
     A PyTorch Dataset class to be used in a PyTorch DataLoader to create batches.
     """
 
-    def __init__(self, data_folder, data_name, split, transform=None):
+    def __init__(self, data_folder, data_name, split, annotation_path, sentence_path, transform=None):
         """
         :param data_folder: folder where data files are stored
         :param data_name: base name of processed datasets
@@ -130,6 +130,22 @@ class CaptionDataset(Dataset):
         with open(os.path.join(data_folder, self.split + '_CAPLENS_' + data_name + '.json'), 'r') as j:
             self.caplens = json.load(j)
 
+        # for flickr30k_entities sentences and bounding box annotations
+        with open(os.path.join(data_folder, self.split + '_ANNOTATIONS_' + data_name + '.json'), 'r') as j:
+            self.annotations = json.load(j)
+
+        # Save word map to a JSON
+        with open(os.path.join(data_folder, 'WORDMAP_' + data_name + '.json'), 'r') as j:
+            self.word_map = json.load(j)
+
+        # bounding box annotations
+        with open(annotation_path, 'r') as j:
+            self.annotation_data = json.load(j)
+
+        # sentence phrases
+        with open(sentence_path, 'r') as j:
+            self.sentence_data = json.load(j)
+
         # PyTorch transformation pipeline for the image (normalizing, etc.)
         self.transform = transform
 
@@ -141,6 +157,13 @@ class CaptionDataset(Dataset):
         img = torch.FloatTensor(self.imgs[i // self.cpi] / 255.)
         if self.transform is not None:
             img = self.transform(img)
+
+        file_key = self.annotations[i // self.cpi]
+        annotation = self.annotation_data[file_key]
+        print(annotation)
+        sentences = self.sentence_data[file_key]
+        print(sentences)
+        print(sentences[i % self.cpi])
 
         caption = torch.LongTensor(self.captions[i])
 
