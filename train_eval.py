@@ -26,8 +26,8 @@ cudnn.benchmark = True         # set to true only if inputs to model are fixed s
 start_epoch = 0
 epochs = 40                             # number of epochs to train before finetuning the encoder. Set to 18 when finetuning ecoder
 epochs_since_improvement = 0            # keeps track of number of epochs since there's been an improvement in validation BLEU
-batch_size = 80                         # set to 32 when finetuning the encoder
-workers = 4                             # number of workers for data-loading
+batch_size = 2                         # set to 32 when finetuning the encoder
+workers = 0                             # number of workers for data-loading
 encoder_lr = 1e-4                       # learning rate for encoder. if fine-tuning, change to 1e-5 for CNN parameters only
 decoder_lr = 5e-4                       # learning rate for decoder
 grad_clip = 0.1                         # clip gradients at an absolute value of
@@ -59,7 +59,7 @@ def train(train_loader, encoder, decoder, criterion, encoder_optimizer, decoder_
     top5accs = AverageMeter()       # top5 accuracy
 
     # Batches
-    for i, (imgs, caps, caplens, _, _) in enumerate(train_loader):
+    for i, (imgs, caps, caplens) in enumerate(train_loader):
 
         # Move to GPU, if available
         imgs = imgs.to(device)
@@ -112,7 +112,7 @@ def validate(val_loader, encoder, decoder, beam_size, epoch, vocab_size):
     hypothesis = []
     
     #image_id = "EVALUATING AT BEAM SIZE  " + str(beam_size)
-    for index, (img, caption, caplen, all_captions, _, _, _) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
+    for index, (img, caption, caplen, all_captions) in enumerate(tqdm(val_loader, desc="EVALUATING AT BEAM SIZE " + str(beam_size))):
 
         k = beam_size
         infinite_pred = False

@@ -160,17 +160,25 @@ class CaptionDataset(Dataset):
         img = torch.FloatTensor(self.imgs[i // self.cpi] / 255.)
         if self.transform is not None:
             img = self.transform(img)
-
+      
+        print(i // self.cpi, flush=True)
         file_key = self.annotations[i // self.cpi]
+        print(file_key, flush=True)
         annotation = self.annotation_data[file_key]
-        # print(annotation, flush=True)
+        print("Annotations", annotation, flush=True)
         sentences = self.sentence_data[file_key]
-        # print(sentences, flush=True)
-        # print(sentences[i % self.cpi], flush=True)
+        print("Sentneces", sentences, flush=True)
+        print("single snentensdec", sentences[i // self.cpi], flush=True)
         sentence_map = sentences[i % self.cpi]
         sentence = sentence_map['sentence']
+        
+        for sent in sentences:
+            enc_sent = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sent['sentence'].lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']]     * (self.max_len - len(sent['sentence'].split())))
+            print(enc_sent, sent['sentence'])
 
-        sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
+  
+        print("caption_data---------", sentence, flush=True)
+        sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence.lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence['sentence'].split())))
 
         caption = torch.LongTensor(self.captions[i])
 
@@ -179,12 +187,12 @@ class CaptionDataset(Dataset):
         caplen = torch.LongTensor([self.caplens[i]])
 
         if self.split is 'TRAIN':
-            return img, caption, caplen, sentence_map, annotation
+            return img, caption, caplen #, sentence_map, annotation
         else:
             # For validation of testing, also return all 'captions_per_image' captions to find BLEU-4 score
             all_captions = torch.LongTensor(
                 self.captions[((i // self.cpi) * self.cpi):(((i // self.cpi) * self.cpi) + self.cpi)])
-            return img, caption, caplen, all_captions, sentence_map, annotation, sentences
+            return img, caption, caplen, all_captions #, sentence_map, annotation, sentences
 
     def __len__(self):
         return self.dataset_size
