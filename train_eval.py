@@ -35,10 +35,10 @@ best_bleu4 = 0.                         # Current BLEU-4 score
 print_freq = 100                        # print training/validation stats every __ batches
 log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = './checkpoint_26.pth.tar'    # path to checkpoint, None at the begining
+checkpoint = './checkpoint_31.pth.tar'    # path to checkpoint, None at the begining
 
-annotation_path = "~/flickr30k_entities/annotation_data.json"
-sentence_path = "~/flickr30k_entities/sentence_data.json"
+annotation_path = "../../../flickr30k_entities/annotation_data.json"
+sentence_path = "../../../flickr30k_entities/sentence_data.json"
 
 data_folder = '../../../caption_dataset/flickr30k_files/'
 dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
@@ -339,4 +339,4 @@ for epoch in range(start_epoch, epochs):
     else:
         epochs_since_improvement = 0
 
-    save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_bleu4, is_best)
+    # save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_bleu4, is_best)

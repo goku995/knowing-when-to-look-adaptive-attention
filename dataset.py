@@ -160,10 +160,10 @@ class CaptionDataset(Dataset):
 
         file_key = self.annotations[i // self.cpi]
         annotation = self.annotation_data[file_key]
-        print(annotation)
+        print(annotation, flush=True)
         sentences = self.sentence_data[file_key]
-        print(sentences)
-        print(sentences[i % self.cpi])
+        print(sentences, flush=True)
+        print(sentences[i % self.cpi], flush=True)
 
         caption = torch.LongTensor(self.captions[i])
 
