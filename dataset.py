@@ -1,4 +1,4 @@
-import os
+import os, re
 
 import h5py
 
@@ -276,7 +276,7 @@ class CaptionDataset(Dataset):
 
             self.word_map = json.load(j)
 
-
+        self.rev_word_map = {v: k for k, v in self.word_map.items()}
 
         # bounding box annotations
 
@@ -324,74 +324,51 @@ class CaptionDataset(Dataset):
 
       
 
-        print(i // self.cpi, flush=True)
+        # print(i // self.cpi, flush=True)
 
         file_key = self.annotations[i // self.cpi]
 
-        print(file_key, flush=True)
+        # print(file_key, flush=True)
 
         annotation = self.annotation_data[file_key]
 
         print("Annotations", annotation, flush=True)
 
         sentences = self.sentence_data[file_key]
-
-        print("Sentneces", sentences, flush=True)
-
-        print("single snentensdec", sentences[i // self.cpi], flush=True)
-
         sentence_map = sentences[i % self.cpi]
+        sentence = sentence_map['sentence'].lower()
+        sentence = re.sub(r'[^\w\s]','',sentence)
+        sentence = sentence.split()
 
-        sentence = sentence_map['sentence'].lower().split()
+        for sent in sentences:
+            print(sent['sentence'])
 
-        
-
-        # for sent in sentences:
-
-        #     enc_sent = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sent['sentence'].lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']]     * (self.max_len - len(sent['sentence'].split())))
-
-        #     print(enc_sent, sent['sentence'])
-
-
-
-  
-
-        print("caption_data---------", sentence_map['sentence'], flush=True)
+        print("caption_data ======== ", sentence_map['sentence'], flush=True)
 
         sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
 
 
-
         caption = torch.LongTensor(self.captions[i])
-
-
-
+        caption_idx = [w.item() for w in caption if w.item() not in {self.word_map['<start>'], self.word_map['<end>'], self.word_map['<pad>']}]
+        caption_sentence = ' '.join(self.rev_word_map[idx] for idx in caption_idx)
+        
+        print(caption_sentence)
         print(sentence_encoding, caption)
-
-
 
         caplen = torch.LongTensor([self.caplens[i]])
 
-
-
         if self.split is 'TRAIN':
 
-            return img, caption, caplen #, sentence_map, annotation
+            return img, caption, caplen 
 
         else:
-
             # For validation of testing, also return all 'captions_per_image' captions to find BLEU-4 score
-
             all_captions = torch.LongTensor(
 
                 self.captions[((i // self.cpi) * self.cpi):(((i // self.cpi) * self.cpi) + self.cpi)])
 
-            return img, caption, caplen, all_captions #, sentence_map, annotation, sentences
-
-
+            return img, caption, caplen, all_captions
 
     def __len__(self):
 
         return self.dataset_size
-
-
