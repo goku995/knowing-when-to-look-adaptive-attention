@@ -170,15 +170,15 @@ class CaptionDataset(Dataset):
         print("Sentneces", sentences, flush=True)
         print("single snentensdec", sentences[i // self.cpi], flush=True)
         sentence_map = sentences[i % self.cpi]
-        sentence = sentence_map['sentence']
+        sentence = sentence_map['sentence'].lower().split()
         
-        for sent in sentences:
-            enc_sent = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sent['sentence'].lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']]     * (self.max_len - len(sent['sentence'].split())))
-            print(enc_sent, sent['sentence'])
+        # for sent in sentences:
+        #     enc_sent = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sent['sentence'].lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']]     * (self.max_len - len(sent['sentence'].split())))
+        #     print(enc_sent, sent['sentence'])
 
   
-        print("caption_data---------", sentence, flush=True)
-        sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence.lower().split()] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence['sentence'].split())))
+        print("caption_data---------", sentence_map['sentence'], flush=True)
+        sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
 
         caption = torch.LongTensor(self.captions[i])
 
