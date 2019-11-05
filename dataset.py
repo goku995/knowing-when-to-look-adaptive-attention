@@ -347,12 +347,11 @@ class CaptionDataset(Dataset):
 
         sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>']) for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
 
-
         caption = torch.LongTensor(self.captions[i])
         caption_idx = [w.item() for w in caption if w.item() not in {self.word_map['<start>'], self.word_map['<end>'], self.word_map['<pad>']}]
         caption_sentence = ' '.join(self.rev_word_map[idx] for idx in caption_idx)
         
-        print(caption_sentence)
+        print("caption_data ======== ", caption_sentence, flush=True)
         print(sentence_encoding, caption)
 
         caplen = torch.LongTensor([self.caplens[i]])
