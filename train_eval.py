@@ -26,7 +26,7 @@ cudnn.benchmark = True         # set to true only if inputs to model are fixed s
 start_epoch = 0
 epochs = 40                             # number of epochs to train before finetuning the encoder. Set to 18 when finetuning ecoder
 epochs_since_improvement = 0            # keeps track of number of epochs since there's been an improvement in validation BLEU
-batch_size = 2                         # set to 32 when finetuning the encoder
+batch_size = 64                         # set to 32 when finetuning the encoder
 workers = 0                             # number of workers for data-loading
 encoder_lr = 1e-4                       # learning rate for encoder. if fine-tuning, change to 1e-5 for CNN parameters only
 decoder_lr = 5e-4                       # learning rate for decoder
@@ -35,7 +35,7 @@ best_bleu4 = 0.                         # Current BLEU-4 score
 print_freq = 100                        # print training/validation stats every __ batches
 log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = './checkpoint_31.pth.tar'    # path to checkpoint, None at the begining
+checkpoint = "checkpoint_32.pth.tar"    # path to checkpoint, None at the begining
 
 annotation_path = "../../../flickr30k_entities/annotation_data.json"
 sentence_path = "../../../flickr30k_entities/sentence_data.json"
@@ -339,4 +339,4 @@ for epoch in range(start_epoch, epochs):
     else:
         epochs_since_improvement = 0
 
-    # save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_bleu4, is_best)
+    save_checkpoint(epoch, epochs_since_improvement, encoder, decoder, encoder_optimizer, decoder_optimizer, recent_bleu4, is_best)
