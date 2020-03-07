@@ -35,19 +35,18 @@ best_bleu4 = 0.                         # Current BLEU-4 score
 print_freq = 100                        # print training/validation stats every __ batches
 log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = "checkpoint_32.pth.tar"    # path to checkpoint, None at the begining
+checkpoint = None    # path to checkpoint, None at the begining
 
-annotation_path = "../../../flickr30k_entities/annotation_data.json"
-sentence_path = "../../../flickr30k_entities/sentence_data.json"
+annotation_path = "../datasets/flickr30k/flickr30k_entities/annotation_data.json"
+sentence_path = "../datasets/flickr30k/flickr30k_entities/sentence_data.json"
 
-data_folder = '../../../caption_dataset/flickr30k_files/'
+data_folder = '../datasets/flickr30k/flickr30k_files/'
 dataset_name = 'flickr30k_5_cap_per_img_5_min_word_freq'  
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("{} device is being used".format(device)) 
 
-now = datetime.now()
-writer = SummaryWriter('./runs/attention_{}'.format(now.strftime("%d_%H_%M")))
+writer = SummaryWriter()
 
 unorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 

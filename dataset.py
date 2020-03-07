@@ -39,8 +39,8 @@ class CaptionDataset(Dataset):
             self.captions = json.load(j)
 
         # Load caption lengths (completely into memory)
-        with open(os.path.join(data_folder, self.split + '_CAPLENS_' + data_name + '.json'), 'r') as j:
-            self.caplens = json.load(j)
+        # with open(os.path.join(data_folder, self.split + '_CAPLENS_' + data_name + '.json'), 'r') as j:
+        #    self.caplens = json.load(j)
 
         # for flickr30k_entities sentences and bounding box annotations
         with open(os.path.join(data_folder, self.split + '_ANNOTATIONS_' + data_name + '.json'), 'r') as j:
@@ -96,7 +96,7 @@ class CaptionDataset(Dataset):
         sentence_encoding = torch.LongTensor([self.word_map['<start>']] + [self.word_map.get(word, self.word_map['<unk>'])
                                             for word in sentence] + [self.word_map['<end>']] + [self.word_map['<pad>']] * (self.max_len - len(sentence)))
 
-        caption = torch.LongTensor(self.captions[i])
+        caption = torch.LongTensor(self.captions[str(i)])
         caption_idx = [w.item() for w in caption if w.item() not in {
             self.word_map['<start>'], self.word_map['<end>'], self.word_map['<pad>']}]
         caption_sentence = ' '.join(
@@ -105,7 +105,7 @@ class CaptionDataset(Dataset):
         # print("caption_data ======== ", caption_sentence, flush=True)
         # print(sentence_encoding, caption)
 
-        caplen = torch.LongTensor([self.caplens[i]])
+        caplen = torch.LongTensor([self.caplens[str(i)]])
 
         if self.split is 'TRAIN':
             return img, caption, caplen
