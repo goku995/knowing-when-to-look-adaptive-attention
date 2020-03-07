@@ -35,7 +35,7 @@ best_bleu4 = 0.                         # Current BLEU-4 score
 print_freq = 100                        # print training/validation stats every __ batches
 log_freq = 400
 fine_tune_encoder = False                # set to true after 20 epochs 
-checkpoint = None    # path to checkpoint, None at the begining
+checkpoint = 'checkpoint_6.pth.tar'    # path to checkpoint, None at the begining
 
 annotation_path = "../datasets/flickr30k/flickr30k_entities/annotation_data.json"
 sentence_path = "../datasets/flickr30k/flickr30k_entities/sentence_data.json"
@@ -282,13 +282,13 @@ criterion = nn.CrossEntropyLoss().to(device)
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
-train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'TRAIN', annotation_path, sentence_path, transform=transforms.Compose([normalize])), 
+train_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'TRAIN', transform=transforms.Compose([normalize])), 
                                             batch_size=batch_size, 
                                             shuffle=True, 
                                             num_workers=workers, 
                                             pin_memory=True)
 
-val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', annotation_path, sentence_path, transform=transforms.Compose([normalize])), 
+val_loader = torch.utils.data.DataLoader(CaptionDataset(data_folder, dataset_name, 'VAL', transform=transforms.Compose([normalize])), 
                                             batch_size=1, 
                                             shuffle=True, 
                                             num_workers=workers, 
